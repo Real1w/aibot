@@ -3,64 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CodExpert AI - Powered by GPT-4o</title>
+    <title>Realshi Coding Bot/title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-batch.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <div class="logo">
-                <h1>CodExpert AI</h1>
-                <p>Powered by GPT-4o - C++, Python, HTML, Batch & Everything</p>
+    <div class="app">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <button id="mobile-toggle" class="mobile-only"><i class="fas fa-bars"></i></button>
+            <div class="sidebar-header">
+                <button id="new-chat"><i class="fas fa-plus"></i> New Chat</button>
             </div>
-            <div class="header-actions">
-                <button id="clear-chat" class="clear-btn">🗑️ Clear</button>
-                <button id="settings-btn" class="settings-btn">⚙️</button>
-            </div>
-        </header>
-
-        <div class="chat-container" id="chat-container">
-            <div class="welcome-message">
-                <div class="avatar ai-avatar">🤖</div>
-                <div class="message ai-message">
-                    <p>Yo! I'm CodExpert AI running on GPT-4o. Drop any code, question, or bug — I got you. C++, Python, HTML, Batch, whatever. Let's build something dope.</p>
-                </div>
+            <div id="convo-list" class="convo-list"></div>
+            <div class="sidebar-footer">
+                <select id="model-select">
+                    <option value="gpt-4o-mini">GPT-4o-mini (fast & cheap)</option>
+                    <option value="gpt-4o">GPT-4o (beast mode)</option>
+                    <option value="o1-preview">o1-preview (reasoning god)</option>
+                    <option value="o1-mini">o1-mini (fast reasoning)</option>
+                </select>
+                <button id="settings-btn"><i class="fas fa-cog"></i> API Key</button>
             </div>
         </div>
 
-        <div class="input-container">
-            <div class="input-wrapper">
-                <input type="text" id="user-input" placeholder="Ask about code or paste it here... (Shift+Enter for new line)" maxlength="8000">
-                <button id="send-btn" class="send-btn">Send</button>
+        <!-- Main Chat -->
+        <div class="main">
+            <header>
+                <div class="logo">
+                    <h1>CodExpert AI</h1>
+                    <p id="user-greeting">Yo <span id="user-name">dev</span> 🔥</p>
+                </div>
+            </header>
+
+            <div id="chat-container" class="chat-container"></div>
+
+            <div class="input-area">
+                <textarea id="user-input" placeholder="Drop code, bugs, or vibes... (Shift+Enter for newline)" rows="1"></textarea>
+                <div class="input-actions">
+                    <button id="send-btn" title="Send"><i class="fas fa-paper-plane"></i></button>
+                    <button id="stop-btn" class="hidden" title="Stop"><i class="fas fa-stop"></i></button>
+                </div>
+                <div id="status">Ready bro</div>
             </div>
-            <div class="status" id="status"></div>
         </div>
     </div>
 
-    <div id="settings-modal" class="modal">
+    <div id="toast" class="toast hidden">Copied!</div>
+
+    <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
             <span class="close">&times;</span>
-            <h2>OpenAI API Settings</h2>
-            <p>Get your key from <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a></p>
-            <label for="api-key">API Key (starts with sk-...):</label>
+            <h2>OpenAI API Key</h2>
+            <p>Get from <a href="https://platform.openai.com/api-keys" target="_blank">here</a></p>
             <input type="password" id="api-key" placeholder="sk-...">
-            <label for="model-select">Model:</label>
-            <select id="model-select">
-                <option value="gpt-4o-mini">GPT-4o-mini (fast & cheap)</option>
-                <option value="gpt-4o">GPT-4o (smartest)</option>
-                <option value="o1-preview">o1-preview (reasoning god)</option>
-                <option value="o1-mini">o1-mini (fast reasoning)</option>
-            </select>
             <button id="save-api-key">Save & Test Key</button>
             <div id="test-result" class="test-result"></div>
         </div>
