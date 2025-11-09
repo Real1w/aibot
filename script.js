@@ -25,7 +25,7 @@ class CodExpertAI {
         this.init();
     }
 
-    init() {
+     init() {
         this.userNameSpan.textContent = this.userName;
         this.modelSelect.value = this.model;
         this.renderConvos();
@@ -51,6 +51,8 @@ class CodExpertAI {
             localStorage.setItem('openai-model', this.model);
             this.status.textContent = `Switched to ${this.model}`;
             setTimeout(() => this.status.textContent = 'Ready bro', 2000);
+            this.status.textContent = `Model switched to ${this.model}`;
+            setTimeout(() => this.status.textContent = 'Ready to build', 2200);
         };
         document.getElementById('mobile-toggle').onclick = () => {
             document.querySelector('.sidebar').classList.toggle('open');
@@ -73,6 +75,13 @@ class CodExpertAI {
         let msg = this.userInput.value.trim();
         if (!msg || !this.apiKey) {
             if (!this.apiKey) this.openModal();
+        const msg = this.userInput.value.trim();
+        if (!msg) return;
+
+        if (!this.apiKey) {
+            this.openModal();
+            this.status.textContent = 'Add your OpenAI key to continue';
+            setTimeout(() => this.status.textContent = 'Ready to build', 2200);
             return;
         }
 
@@ -85,6 +94,8 @@ class CodExpertAI {
             this.autoResize();
             this.status.textContent = `Name set to ${this.userName} 🔥`;
             setTimeout(() => this.status.textContent = 'Ready bro', 2000);
+            this.status.textContent = `Name updated to ${this.userName}`;
+            setTimeout(() => this.status.textContent = 'Ready to build', 2200);
             return;
         }
 
@@ -94,6 +105,7 @@ class CodExpertAI {
         this.sendBtn.classList.add('hidden');
         this.stopBtn.classList.remove('hidden');
         this.status.textContent = 'GPT cooking...';
+        this.status.textContent = 'Crafting a response…';
 
         if (!this.currentConvoId) this.newConvo();
         const convo = this.getCurrentConvo();
@@ -113,6 +125,7 @@ class CodExpertAI {
         } catch (err) {
             if (err.name !== 'AbortError') {
                 this.addMessage(`Error: ${err.message}. Key leaked? Revoke it NOW.`, 'ai');
+                this.addMessage(`Something went wrong: ${err.message}. Double-check your API key and try again.`, 'ai');
             }
         } finally {
             this.stop();
@@ -125,6 +138,7 @@ class CodExpertAI {
         this.sendBtn.classList.remove('hidden');
         this.stopBtn.classList.add('hidden');
         this.status.textContent = 'Ready bro';
+        this.status.textContent = 'Ready to build';
     }
 
     addMessage(content, sender, streaming = false) {
@@ -157,8 +171,25 @@ class CodExpertAI {
         return text
             .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code class="language-$1">$2</code><button class="copy-btn">Copy</button></pre>')
             .replace(/`([^`]+)`/g, '<code>$1</code>')
+        if (!text) return '';
+        const withBlocks = text.replace(/```([\w+-]*)?\n([\s\S]*?)```/g, (_, lang = '', code = '') => {
+            const safeLang = lang ? lang.toLowerCase() : 'plaintext';
+            return `<pre><code class="language-${safeLang}">${this.escapeHtml(code)}</code><button class="copy-btn">Copy</button></pre>`;
+        });
+
+        return withBlocks
+            .replace(/`([^`]+)`/g, (_, code) => `<code>${this.escapeHtml(code)}</code>`)
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\*(.*?)\*/g, '<em>$1</em>');
+    }
+
+    escapeHtml(text) {
+        return text
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
     }
 
     addCopyButtons(container) {
@@ -174,6 +205,7 @@ class CodExpertAI {
                 }
                 navigator.clipboard.writeText(text);
                 this.showToast('Copied!');
+                this.showToast('Copied to clipboard');
             };
         });
     }
@@ -216,6 +248,7 @@ class CodExpertAI {
                 model: this.model,
                 messages: [
                     { role: 'system', content: `You are CodExpert AI — savage coding mentor. Master of C++, C#, Python, Lua, Batch. Direct, funny, perfect code blocks, roast bad code. Use ${this.model} power.` },
+                    { role: 'system', content: `You are CodExpert AI — an expert engineering mentor. Offer calm, encouraging guidance, structure thinking, and produce high-quality code snippets when they are helpful. Keep answers focused, actionable, and tailored to the user's stack. Model in use: ${this.model}.` },
                     ...messages
                 ],
                 stream: true,
@@ -228,6 +261,7 @@ class CodExpertAI {
         if (!res.ok) {
             const err = await res.json();
             throw new Error(err.error?.message || 'API dead bro');
+            throw new Error(err.error?.message || 'Service unavailable right now');
         }
 
         const reader = res.body.getReader();
@@ -253,57 +287,7 @@ class CodExpertAI {
     }
 
     newConvo() {
-        const id = Date.now();
-        this.convos.push({ id, title: 'New Chat', messages: [] });
-        this.saveConvos();
-        this.loadConvo(id);
-        this.renderConvos();
-        this.chatContainer.innerHTML = '';
-        this.addWelcome();
-    }
-
-    loadConvo(id) {
-        this.currentConvoId = id;
-        const convo = this.getCurrentConvo();
-        this.chatContainer.innerHTML = '';
-        if (convo && convo.messages) {
-            convo.messages.forEach(m => {
-                this.addMessage(m.content, m.role === 'user' ? 'user' : 'ai');
-            });
-        } else {
-            this.addWelcome();
-        }
-        this.renderConvos();
-        this.scroll();
-    }
-
-    getCurrentConvo() {
-        return this.convos.find(c => c.id === this.currentConvoId) || { messages: [] };
-    }
-
-    renderConvos() {
-        this.convoList.innerHTML = '';
-        this.convos.forEach(c => {
-            const div = document.createElement('div');
-            div.className = `convo-item ${c.id === this.currentConvoId ? 'active' : ''}`;
-            div.innerHTML = `<span>${c.title || 'New Chat'}</span><button class="delete"><i class="fas fa-trash"></i></button>`;
-            div.onclick = (e) => {
-                if (!e.target.closest('.delete')) this.loadConvo(c.id);
-            };
-            div.querySelector('.delete').onclick = (e) => {
-                e.stopPropagation();
-                if (confirm('Delete this chat?')) {
-                    this.convos = this.convos.filter(x => x.id !== c.id);
-                    this.saveConvos();
-                    this.renderConvos();
-                    if (c.id === this.currentConvoId) this.newConvo();
-                }
-            };
-            this.convoList.appendChild(div);
-        });
-    }
-
-    async autoTitleConvo() {
+@@ -307,86 +325,87 @@ class CodExpertAI {
         const convo = this.getCurrentConvo();
         if ((convo.title && convo.title !== 'New Chat') || convo.messages.length < 2) return;
         try {
@@ -332,6 +316,9 @@ class CodExpertAI {
                     Yo <b>${this.userName}</b>! I'm CodExpert AI running on <b>${this.model}</b>.<br>
                     Drop any code, bug, or question — C++, C#, Python, Lua, Batch, whatever.<br>
                     Let's build something dope 🔥
+                    Welcome back, <b>${this.userName}</b>! I'm CodExpert AI running on <b>${this.model}</b>.<br>
+                    Paste tricky snippets, outline product ideas, or describe bugs — I’ll help you debug, refactor, and ship faster.<br>
+                    Tip: type <code>/name YourName</code> any time to personalise the experience.
                 </div>
             </div>`;
     }
@@ -348,6 +335,7 @@ class CodExpertAI {
 
         this.saveKeyBtn.disabled = true;
         this.saveKeyBtn.textContent = 'Testing...';
+        this.saveKeyBtn.textContent = 'Testing…';
         this.testResult.className = 'test-result';
         this.testResult.textContent = '';
 
@@ -369,8 +357,11 @@ class CodExpertAI {
                     localStorage.setItem('openai-key', key);
                     this.testResult.className = 'test-result success';
                     this.testResult.textContent = 'Key valid! Let’s code 🔥';
+                    this.testResult.textContent = 'Key verified — let’s build!';
                     setTimeout(() => this.modal.classList.add('hidden'), 1500);
                     this.status.textContent = `Using ${this.model}`;
+                    this.status.textContent = `Model ready: ${this.model}`;
+                    setTimeout(() => this.status.textContent = 'Ready to build', 2200);
                 }
             } else {
                 throw new Error();
@@ -378,6 +369,7 @@ class CodExpertAI {
         } catch (err) {
             this.testResult.className = 'test-result error';
             this.testResult.textContent = 'Invalid key or no credits. Revoke & make new one.';
+            this.testResult.textContent = 'Invalid key or missing credits. Generate a new key and try again.';
         } finally {
             this.saveKeyBtn.disabled = false;
             this.saveKeyBtn.textContent = 'Save & Test Key';
