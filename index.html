@@ -20,6 +20,11 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 </head>
 <body>
+    <div class="background">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="grid"></div>
+    </div>
     <div class="app">
         <!-- Sidebar -->
         <div class="sidebar">
@@ -30,10 +35,10 @@
             <div id="convo-list" class="convo-list"></div>
             <div class="sidebar-footer">
                 <select id="model-select">
-                    <option value="gpt-4o-mini">GPT-4o-mini (fast & cheap)</option>
-                    <option value="gpt-4o">GPT-4o (beast mode)</option>
-                    <option value="o1-preview">o1-preview (reasoning god)</option>
-                    <option value="o1-mini">o1-mini (fast reasoning)</option>
+                    <option value="gpt-4o-mini">GPT-4o-mini (fast & efficient)</option>
+                    <option value="gpt-4o">GPT-4o (advanced reasoning)</option>
+                    <option value="o1-preview">o1-preview (deep planning)</option>
+                    <option value="o1-mini">o1-mini (quick reasoning)</option>
                 </select>
                 <button id="settings-btn"><i class="fas fa-cog"></i> API Key</button>
             </div>
@@ -43,25 +48,35 @@
         <div class="main">
             <header>
                 <div class="logo">
-                    <h1>CodExpert AI</h1>
-                    <p id="user-greeting">Yo <span id="user-name">dev</span> 🔥</p>
+                    <div class="logo-mark"><i class="fas fa-bolt"></i></div>
+                    <div>
+                        <h1>CodExpert AI</h1>
+                        <p id="user-greeting">Hey <span id="user-name">dev</span>, ready to ship something brilliant?</p>
+                    </div>
+                </div>
+                <div class="header-badges">
+                    <span class="badge"><i class="fas fa-rocket"></i> Multi-language</span>
+                    <span class="badge"><i class="fas fa-code"></i> Pro snippets</span>
+                    <span class="badge"><i class="fas fa-shield-alt"></i> Private by default</span>
                 </div>
             </header>
 
             <div id="chat-container" class="chat-container"></div>
 
             <div class="input-area">
-                <textarea id="user-input" placeholder="Drop code, bugs, or vibes... (Shift+Enter for newline)" rows="1"></textarea>
-                <div class="input-actions">
-                    <button id="send-btn" title="Send"><i class="fas fa-paper-plane"></i></button>
-                    <button id="stop-btn" class="hidden" title="Stop"><i class="fas fa-stop"></i></button>
+                <div class="input-shell">
+                    <textarea id="user-input" placeholder="Explain the bug, share some code, or sketch a feature… (Shift+Enter for newline)" rows="1"></textarea>
+                    <div class="input-actions">
+                        <button id="send-btn" title="Send" aria-label="Send message"><i class="fas fa-paper-plane"></i></button>
+                        <button id="stop-btn" class="hidden" title="Stop" aria-label="Stop response"><i class="fas fa-stop"></i></button>
+                    </div>
                 </div>
-                <div id="status">Ready bro</div>
+                <div id="status">Ready to build</div>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast hidden">Copied!</div>
+    <div id="toast" class="toast hidden">Copied to clipboard</div>
 
     <div id="settings-modal" class="modal hidden">
         <div class="modal-content">
